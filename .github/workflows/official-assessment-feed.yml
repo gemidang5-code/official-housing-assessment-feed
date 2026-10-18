@@ -1,0 +1,33 @@
+name: Free official public-assessment index
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 19 2 * *'
+  push:
+    branches: [main]
+    paths:
+      - scripts/build-assessment-index.mjs
+      - scripts/refresh-assessment-feed.mjs
+      - lib/assessment-index-format.ts
+      - .github/workflows/official-assessment-feed.yml
+permissions:
+  contents: write
+concurrency:
+  group: official-assessment-public-source
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify and index the complete official public dataset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/refresh-assessment-feed.mjs
